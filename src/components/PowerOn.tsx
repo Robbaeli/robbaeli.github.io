@@ -1,7 +1,10 @@
 import { useRef, useState } from 'react'
-import { motion, useAnimate, useReducedMotion } from 'motion/react'
+import { motion, useAnimate, useMotionValue, useReducedMotion } from 'motion/react'
 import { useLang } from '../i18n'
 import LangToggle from './LangToggle'
+import { apps } from '../data/apps'
+import { useClock } from '../useClock'
+import WarpField from './WarpField'
 
 type Phase = 'off' | 'booting' | 'zooming'
 
@@ -10,10 +13,12 @@ const SCREEN_H = 598
 
 export default function PowerOn({ onDone }: { onDone: () => void }) {
   const { t } = useLang()
+  const { time, date } = useClock()
   const [phase, setPhase] = useState<Phase>('off')
   const [scope, animate] = useAnimate()
   const reduce = useReducedMotion()
   const started = useRef(false)
+  const warpSpeed = useMotionValue(1)
 
   const powerOn = async () => {
     if (started.current) return
@@ -21,24 +26,48 @@ export default function PowerOn({ onDone }: { onDone: () => void }) {
     if (reduce) return onDone()
 
     setPhase('booting')
-    // 1. Knappen trycks in, telefonen vaknar
-    await animate('.side-button', { x: [0, -3, 0] }, { duration: 0.25 })
-    await new Promise((r) => setTimeout(r, 1500))
+    // 1. Telefonen startar och drar sakta tittaren närmare (~2,4 s)
+    animate('.side-button', { x: [0, -3, 0] }, { duration: 0.25 })
+    animate('.phone', { scale: 1.1, rotateX: 2, rotateY: -6 }, { duration: 2.4, ease: [0.5, 0, 0.9, 0.5] })
+    await new Promise((r) => setTimeout(r, 2400))
 
-    // 2. Flyg in i skärmen
+    // 2. Hemskärmen tänds – och ett svart hål öppnar sig mitt i den (~2,4 s)
     setPhase('zooming')
-    const scale = Math.max(window.innerWidth / SCREEN_W, window.innerHeight / SCREEN_H) * 1.12
-    animate('.hint, .skip, .lang-toggle', { opacity: 0 }, { duration: 0.3 })
-    await animate(
-      '.phone',
-      { scale, rotateX: [6, 0], rotateY: [-14, 0] },
-      { duration: 1.25, ease: [0.76, 0, 0.18, 1] },
+    const cover = Math.max(window.innerWidth / SCREEN_W, window.innerHeight / SCREEN_H) * 1.35
+    animate('.hint, .skip, .lang-toggle', { opacity: 0 }, { duration: 0.4 })
+    animate('.mini-ui > *', { opacity: [0, 1], y: [8, 0] }, { duration: 0.4, delay: (i) => i * 0.07 })
+
+    // Stjärnorna tänds och accelererar till ljusstrimmor
+    animate('.warp', { opacity: 1 }, { duration: 0.6 })
+    animate(warpSpeed, 70, { duration: 2.4, ease: [0.55, 0, 0.9, 0.45] })
+    animate('.power-bg', { opacity: 0 }, { duration: 1.6 })
+
+    // Hålet öppnar sig, pulserar och växer till slut över allt
+    animate(
+      '.vortex',
+      { scale: [0, 1, 1.15, 10] },
+      { duration: 2.4, delay: 0.2, times: [0, 0.3, 0.55, 1], ease: ['backOut', 'easeInOut', 'easeIn'] },
     )
+    // Hemskärmen spiralar in i hålet
+    animate(
+      '.mini-ui',
+      { scale: 0, rotate: 240, opacity: 0, filter: 'blur(3px)' },
+      { duration: 1.5, delay: 0.55, ease: [0.6, 0, 0.9, 0.4] },
+    )
+    // Telefonen vänder sig mot oss och tittaren faller in med en vridning
+    animate('.phone', { rotateX: 0, rotateY: 0, y: 0 }, { duration: 0.8, ease: 'easeOut' })
+    await animate('.phone', { scale: cover, rotate: [0, -30] }, { duration: 2.4, ease: [0.65, 0, 0.9, 0.35] })
+
+    // 3. Ljusblixt på andra sidan
+    await animate('.warp-flash', { opacity: [0, 1] }, { duration: 0.18, ease: 'easeIn' })
     onDone()
   }
 
   return (
-    <div className="power" ref={scope}>
+    <motion.div className="power" ref={scope} exit={{ opacity: 0 }} transition={{ duration: 0.5, ease: 'easeOut' }}>
+      <div className="power-bg" aria-hidden />
+      <WarpField speed={warpSpeed} />
+      <div className="warp-flash" aria-hidden />
       <LangToggle />
 
       <div className="phone-stage">
@@ -58,10 +87,9 @@ export default function PowerOn({ onDone }: { onDone: () => void }) {
             aria-label={t('powerOn')}
             disabled={phase !== 'off'}
           />
-          <div className="screen" onClick={powerOn}>
+          <div className="screen">
             <div className="island" />
-            <div className={`screen-wall ${phase === 'zooming' ? 'on' : ''}`} />
-            {phase === 'booting' && (
+            {phase !== 'off' && (
               <motion.div
                 className="boot"
                 initial={{ opacity: 0, scale: 0.92, filter: 'blur(8px)' }}
@@ -70,10 +98,37 @@ export default function PowerOn({ onDone }: { onDone: () => void }) {
               >
                 <span className="boot-mark">Röbba</span>
                 <span className="boot-bar">
-                  <motion.i initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 1.4, ease: 'easeInOut' }} />
+                  <motion.i initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 1, ease: 'easeInOut' }} />
                 </span>
               </motion.div>
             )}
+            <div className={`screen-home wallpaper ${phase === 'zooming' ? 'on' : ''}`} aria-hidden>
+              <div className="mini-ui">
+                <div className="mini-widget">
+                  <p className="mini-date">{date}</p>
+                  <p className="mini-time">{time}</p>
+                </div>
+                <div className="mini-grid">
+                  {apps
+                    .filter((a) => !a.dock)
+                    .map((a) => (
+                      <span key={a.id} className="tile">
+                        {a.icon}
+                      </span>
+                    ))}
+                </div>
+                <div className="mini-dock">
+                  {apps
+                    .filter((a) => a.dock)
+                    .map((a) => (
+                      <span key={a.id} className="tile">
+                        {a.icon}
+                      </span>
+                    ))}
+                </div>
+              </div>
+            </div>
+            <div className="vortex" aria-hidden />
             <div className="glare" aria-hidden />
           </div>
         </motion.div>
@@ -98,6 +153,6 @@ export default function PowerOn({ onDone }: { onDone: () => void }) {
       <button type="button" className="skip" onClick={onDone}>
         {t('skip')}
       </button>
-    </div>
+    </motion.div>
   )
 }
