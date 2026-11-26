@@ -61,7 +61,7 @@ export default function App() {
             <motion.div
               ref={homeScope}
               className="home-enter"
-              initial={landing ? { scale: 1.15, filter: 'blur(12px)' } : false}
+              initial={landing ? { scale: 1.08, filter: 'blur(6px)' } : false}
               animate={{ scale: 1, filter: 'blur(0px)' }}
               transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
             >

@@ -28,7 +28,7 @@ export default function PowerOn({ onDone }: { onDone: () => void }) {
     setPhase('booting')
     // 1. Telefonen startar och drar sakta tittaren närmare (~2,4 s)
     animate('.side-button', { x: [0, -3, 0] }, { duration: 0.25 })
-    animate('.phone', { scale: 1.1, rotateX: 2, rotateY: -6 }, { duration: 2.4, ease: [0.5, 0, 0.9, 0.5] })
+    animate('.phone', { scale: 1.04, rotateX: 4, rotateY: -10 }, { duration: 2.4, ease: [0.4, 0, 0.6, 1] })
     await new Promise((r) => setTimeout(r, 2400))
 
     // 2. Hemskärmen tänds – och ett svart hål öppnar sig mitt i den (~2,4 s)
@@ -39,27 +39,27 @@ export default function PowerOn({ onDone }: { onDone: () => void }) {
 
     // Stjärnorna tänds och accelererar till ljusstrimmor
     animate('.warp', { opacity: 1 }, { duration: 0.6 })
-    animate(warpSpeed, 70, { duration: 2.4, ease: [0.55, 0, 0.9, 0.45] })
+    animate(warpSpeed, 40, { duration: 2.4, ease: [0.55, 0, 0.9, 0.45] })
     animate('.power-bg', { opacity: 0 }, { duration: 1.6 })
 
     // Hålet öppnar sig, pulserar och växer till slut över allt
     animate(
       '.vortex',
-      { scale: [0, 1, 1.15, 10] },
-      { duration: 2.4, delay: 0.2, times: [0, 0.3, 0.55, 1], ease: ['backOut', 'easeInOut', 'easeIn'] },
+      { scale: [0, 1, 1.08, 10] },
+      { duration: 2.4, delay: 0.2, times: [0, 0.3, 0.55, 1], ease: ['easeOut', 'easeInOut', 'easeIn'] },
     )
     // Hemskärmen spiralar in i hålet
     animate(
       '.mini-ui',
-      { scale: 0, rotate: 240, opacity: 0, filter: 'blur(3px)' },
+      { scale: 0, rotate: 120, opacity: 0, filter: 'blur(2px)' },
       { duration: 1.5, delay: 0.55, ease: [0.6, 0, 0.9, 0.4] },
     )
     // Telefonen vänder sig mot oss och tittaren faller in med en vridning
     animate('.phone', { rotateX: 0, rotateY: 0, y: 0 }, { duration: 0.8, ease: 'easeOut' })
-    await animate('.phone', { scale: cover, rotate: [0, -30] }, { duration: 2.4, ease: [0.65, 0, 0.9, 0.35] })
+    await animate('.phone', { scale: cover, rotate: [0, -12] }, { duration: 2.4, ease: [0.65, 0, 0.9, 0.35] })
 
     // 3. Ljusblixt på andra sidan
-    await animate('.warp-flash', { opacity: [0, 1] }, { duration: 0.18, ease: 'easeIn' })
+    await animate('.warp-flash', { opacity: [0, 0.55] }, { duration: 0.22, ease: 'easeIn' })
     onDone()
   }
 

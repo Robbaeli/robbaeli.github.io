@@ -4,7 +4,7 @@ import type { MotionValue } from 'motion/react'
 type Star = { x: number; y: number; z: number; color: string }
 
 const COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ffe08a', '#c7a6ff', '#9fe6ff']
-const COUNT = 420
+const COUNT = 260
 
 const spawn = (anyDepth: boolean): Star => ({
   x: Math.random() * 2 - 1,
@@ -47,15 +47,15 @@ export default function WarpField({ speed }: { speed: MotionValue<number> }) {
       const s = speed.get()
       const mag = Math.abs(s)
       const v = 0.03 + s * 0.028 // djup per sekund (negativ = stjärnorna sugs in mot mitten)
-      const spin = 0.05 + mag * 0.035 // virveln drar åt sig stjärnorna
+      const spin = 0.04 + mag * 0.02 // virveln drar åt sig stjärnorna
       const prevAngle = angle
       angle += spin * dt
 
       const cx = w / 2
       const cy = h / 2
       const f = Math.max(w, h) * 0.5
-      const alpha = Math.min(1, 0.35 + mag / 14)
-      const trail = Math.min(0.35, 0.02 + mag * 0.006) // hur långa strimmorna blir
+      const alpha = Math.min(0.75, 0.3 + mag / 18)
+      const trail = Math.min(0.22, 0.02 + mag * 0.005) // hur långa strimmorna blir
 
       ctx.clearRect(0, 0, w, h)
       ctx.lineCap = 'round'
@@ -91,7 +91,7 @@ export default function WarpField({ speed }: { speed: MotionValue<number> }) {
         const near = 1 - st.z
         ctx.globalAlpha = alpha * (0.25 + near * 0.75)
         ctx.strokeStyle = st.color
-        ctx.lineWidth = (0.6 + near * 2.2) * dpr
+        ctx.lineWidth = (0.5 + near * 1.6) * dpr
         ctx.beginPath()
         ctx.moveTo(x0, y0)
         ctx.lineTo(x1 + 0.1, y1 + 0.1)
