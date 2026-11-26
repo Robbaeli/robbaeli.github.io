@@ -2,8 +2,6 @@ import { useRef, useState } from 'react'
 import { motion, useAnimate, useMotionValue, useReducedMotion } from 'motion/react'
 import { useLang } from '../i18n'
 import LangToggle from './LangToggle'
-import { apps } from '../data/apps'
-import { useClock } from '../useClock'
 import WarpField from './WarpField'
 
 type Phase = 'off' | 'booting' | 'zooming'
@@ -13,7 +11,6 @@ const SCREEN_H = 598
 
 export default function PowerOn({ onDone }: { onDone: () => void }) {
   const { t } = useLang()
-  const { time, date } = useClock()
   const [phase, setPhase] = useState<Phase>('off')
   const [scope, animate] = useAnimate()
   const reduce = useReducedMotion()
@@ -31,11 +28,10 @@ export default function PowerOn({ onDone }: { onDone: () => void }) {
     animate('.phone', { scale: 1.04, rotateX: 4, rotateY: -10 }, { duration: 2.4, ease: [0.4, 0, 0.6, 1] })
     await new Promise((r) => setTimeout(r, 2400))
 
-    // 2. Hemskärmen tänds – och ett svart hål öppnar sig mitt i den (~2,4 s)
+    // 2. Skärmen tänds – och ett svart hål öppnar sig mitt i den (~2,4 s)
     setPhase('zooming')
     const cover = Math.max(window.innerWidth / SCREEN_W, window.innerHeight / SCREEN_H) * 1.35
     animate('.hint, .skip, .lang-toggle', { opacity: 0 }, { duration: 0.4 })
-    animate('.mini-ui > *', { opacity: [0, 1], y: [8, 0] }, { duration: 0.4, delay: (i) => i * 0.07 })
 
     // Stjärnorna tänds och accelererar till ljusstrimmor
     animate('.warp', { opacity: 1 }, { duration: 0.6 })
@@ -47,12 +43,6 @@ export default function PowerOn({ onDone }: { onDone: () => void }) {
       '.vortex',
       { scale: [0, 1, 1.08, 10] },
       { duration: 2.4, delay: 0.2, times: [0, 0.3, 0.55, 1], ease: ['easeOut', 'easeInOut', 'easeIn'] },
-    )
-    // Hemskärmen spiralar in i hålet
-    animate(
-      '.mini-ui',
-      { scale: 0, rotate: 120, opacity: 0, filter: 'blur(2px)' },
-      { duration: 1.5, delay: 0.55, ease: [0.6, 0, 0.9, 0.4] },
     )
     // Telefonen vänder sig mot oss och tittaren faller in med en vridning
     animate('.phone', { rotateX: 0, rotateY: 0, y: 0 }, { duration: 0.8, ease: 'easeOut' })
@@ -102,32 +92,7 @@ export default function PowerOn({ onDone }: { onDone: () => void }) {
                 </span>
               </motion.div>
             )}
-            <div className={`screen-home wallpaper ${phase === 'zooming' ? 'on' : ''}`} aria-hidden>
-              <div className="mini-ui">
-                <div className="mini-widget">
-                  <p className="mini-date">{date}</p>
-                  <p className="mini-time">{time}</p>
-                </div>
-                <div className="mini-grid">
-                  {apps
-                    .filter((a) => !a.dock)
-                    .map((a) => (
-                      <span key={a.id} className="tile">
-                        {a.icon}
-                      </span>
-                    ))}
-                </div>
-                <div className="mini-dock">
-                  {apps
-                    .filter((a) => a.dock)
-                    .map((a) => (
-                      <span key={a.id} className="tile">
-                        {a.icon}
-                      </span>
-                    ))}
-                </div>
-              </div>
-            </div>
+            <div className={`screen-home wallpaper ${phase === 'zooming' ? 'on' : ''}`} aria-hidden />
             <div className="vortex" aria-hidden />
             <div className="glare" aria-hidden />
           </div>

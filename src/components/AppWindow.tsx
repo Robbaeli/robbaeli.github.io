@@ -36,6 +36,19 @@ export default function AppWindow({ app, onClose }: { app: PhoneApp; onClose: ()
             {app.kind === 'web' && <iframe src={app.src} title={name} loading="eager" />}
             {app.kind === 'native' && <app.Component />}
           </motion.div>
+          <motion.button
+            type="button"
+            className="back-button"
+            onClick={onClose}
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0, transition: { delay: 0.22 } }}
+            exit={{ opacity: 0, transition: { duration: 0.08 } }}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+            {t('back')}
+          </motion.button>
           <button type="button" className="home-bar" onClick={onClose} aria-label={t('home')}>
             <span />
           </button>
